@@ -1,0 +1,10 @@
+ZAPISANA WERSJA: "wersja-ok" (lub "wersja stabilna")
+Data zapisu: 2026-09-18
+Opis:
+- Zmniejszony o 25% przycisk "ZAREZERWUJ MIEJSCE" w górnym menu, idealnie wyśrodkowany (103px / 103px)
+- Napisy POTRAWY, KOKTAJLE, WNĘTRZA w galerii: font Brygada 1918, bold, zmniejszone o 2 punkty (23px/29px), kolor pomarańczowy (#EB4C22) z delikatnym cieniem z placeholdera
+- Pełne wsparcie dla wersji angielskiej (DISHES, COCKTAILS, INTERIORS / BOOK A TABLE)
+
+Plik kopii zapasowej:
+/src/backup/App.tsx.wersja-ok
+/src/backup/App.tsx.wersja-stabilna-galeria

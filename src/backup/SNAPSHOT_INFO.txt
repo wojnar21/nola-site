@@ -1,0 +1,30 @@
+================================================================================
+ZAPISANA WERSJA: "wersja-ostateczna" (lub "wersja-finalna")
+Data zapisu: 2026-09-18
+Status: Ostateczna wersja produkcyjna strony internetowej NOLA
+================================================================================
+
+Zawartość i kluczowe cechy tej wersji:
+1. Galeria:
+   - Domyślny start: kafelek "POTRAWY" / "FOOD" startuje od 3. zdjęcia (food-3.jpg).
+   - Domyślny start: kafelek "WNĘTRZE" / "INTERIOR" startuje od 3. zdjęcia.
+   - Płynny ruch kafelków przy najechaniu myszką: zsynchronizowany na 0.5s ease-out.
+   - Mleczna przysłona (knockout stencil): krycie 50% bieli (fillOpacity="0.50").
+   - 1px obramówka w kolorze bordo (#571723) wokół 3 kafelków początkowych.
+   - 1px obramówka w kolorze bordo (#571723) wokół wyciętych napisów (POTRAWY, KOKTAJLE, WNĘTRZE / FOOD, COCKTAILS, INTERIOR).
+   - Brak przecinających się linii w literach (K, A, R, E) dzięki bezszwowemu filtrowi SVG Morphology.
+2. Nagłówek i Menu:
+   - Zmniejszony o 25% przycisk "ZAREZERWUJ MIEJSCE" w górnym menu, idealnie wyśrodkowany.
+   - Przełącznik języka PL / EN.
+3. Spójność stylistyczna:
+   - Kolory NOLA: Bordo (#571723), Beż (#e9e0da), font Brygada 1918.
+
+Gdzie zapisano kopie:
+1. /src/backup/App.tsx.wersja-ostateczna
+2. /src/backup/App.tsx.final
+3. /snapshots/wersja-ostateczna-final/ (pełny kod źródłowy całej aplikacji)
+
+JAK WRÓCIĆ DO TEJ WERSJI:
+- W czacie wystarczy napisać: "Przywróć wersję ostateczną" lub "Przywróć wersję z backupu wersja-ostateczna".
+- Ręcznie w terminalu: cp src/backup/App.tsx.wersja-ostateczna src/App.tsx
+================================================================================

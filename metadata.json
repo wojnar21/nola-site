@@ -1,0 +1,8 @@
+{
+  "name": "Remix NOLA Restauracja \u0026 Cocktail Bar - z paskiem",
+  "description": "Strona internetowa restauracji i cocktail baru NOLA, ze wspaniałym menu oraz urzekającą galerią.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

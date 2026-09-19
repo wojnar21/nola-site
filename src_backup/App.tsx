@@ -1,0 +1,1390 @@
+import { useEffect, useState, useRef, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent, ReactNode, createContext, useContext } from 'react';
+import { createPortal } from 'react-dom';
+import { Routes, Route, useNavigate, useParams, Navigate, Link } from 'react-router-dom';
+import { Mail, Facebook, Instagram } from 'lucide-react';
+import { MenuEditor } from './components/MenuEditor';
+import menuData from './data/menu.json';
+
+type Language = 'pl' | 'en';
+export const LanguageContext = createContext<{lang: Language, setLang: (l: Language) => void}>({
+  lang: 'pl',
+  setLang: () => {}
+});
+
+export const translations = {
+  pl: {
+    about_us: "O nas",
+    gallery: "Galeria",
+    menu: "Menu",
+    contact: "Kontakt",
+    food: "POTRAWY",
+    cocktails: "KOKTAJLE",
+    view_menu: "ZOBACZ MENU",
+    see_menu_card: "KARTA MENU",
+    book_table: "Zarezerwuj Miejsce",
+    book_table_upper: "ZAREZERWUJ MIEJSCE",
+    hours_open_1: "GODZINY",
+    hours_open_2: "OTWARCIA",
+    mon_thu: "PON. - CZW.",
+    friday: "PIĄTEK",
+    saturday: "SOBOTA",
+    sunday: "NIEDZIELA",
+    date: "Data",
+    time: "Godzina",
+    people_count: "Liczba osób",
+    name: "Nazwisko lub imię",
+    phone: "Nr telefonu kontaktowego",
+    email: "Adres e-mail kontaktowy",
+    person: "osoba",
+    people_few: "osoby",
+    people_many: "osób",
+    name_placeholder: "Jan Kowalski",
+    email_placeholder: "twoj@adres.pl",
+    sending: "WYSYŁANIE...",
+    thank_you: "Dziękujemy!",
+    reservation_submitted: "Twoja rezerwacja została zgłoszona.",
+    wait_for_email: "Poczekaj na potwierdzenie rezerwacji w podanym mailu.",
+    ok: "OK",
+    edit_menu: "edytuj menu",
+    back: "Wróć",
+    back_to_top: "Wróć na górę",
+    hero_title_mobile_1: "Tu każdy detal współgra",
+    hero_title_mobile_2: "ze smakiem.",
+    hero_title_desktop_1: "Tu każdy",
+    hero_title_desktop_2: " detal współgra",
+    hero_title_desktop_3: " ze smakiem.",
+    hero_desc_1: "Nasza kuchnia to harmonijne połączenie pasji do gotowania i sztuki tworzenia autorskich koktajli, które zachwycają głębią smaku.",
+    hero_desc_2: "Każda wizyta u nas to spotkanie z profesjonalną, dyskretną obsługą, dbającą o Twój komfort w każdej spędzonej tu chwili. Wyjątkowy wystrój wnętrz tworzy atmosferę intymności i elegancji, sprzyjającą kulinarnym odkryciom. Całość dopełnia subtelna, nienatarczywa muzyka płynąca w tle, która pozwala w pełni cieszyć się wspólnymi chwilami.",
+    hero_desc_mobile: "Nasza kuchnia to harmonijne połączenie pasji do gotowania i sztuki tworzenia autorskich koktajli, które zachwycają głębią smaku. Każda wizyta u nas to spotkanie z profesjonalną, dyskretną obsługą, dbającą o Twój komfort w każdej spędzonej tu chwili. Wyjątkowy wystrój wnętrz tworzy atmosferę intymności i elegancji, sprzyjającą kulinarnym odkryciom. Całość dopełnia subtelna, nienatarczywa muzyka płynąca w tle, która pozwala w pełni cieszyć się wspólnymi chwilami.",
+    next: "dalej"
+  },
+  en: {
+    about_us: "About us",
+    gallery: "Gallery",
+    menu: "Menu",
+    contact: "Contact",
+    food: "FOOD",
+    cocktails: "COCKTAILS",
+    view_menu: "Menu",
+    see_menu_card: "MENU",
+    book_table: "Book a Table",
+    book_table_upper: "BOOK A TABLE",
+    hours_open_1: "OPENING",
+    hours_open_2: "HOURS",
+    mon_thu: "MON. - THU.",
+    friday: "FRIDAY",
+    saturday: "SATURDAY",
+    sunday: "SUNDAY",
+    date: "Date",
+    time: "Time",
+    people_count: "Number of people",
+    name: "Name or surname",
+    phone: "Contact phone number",
+    email: "Contact email address",
+    person: "person",
+    people_few: "people",
+    people_many: "people",
+    name_placeholder: "John Doe",
+    email_placeholder: "your@email.com",
+    sending: "SENDING...",
+    thank_you: "Thank you!",
+    reservation_submitted: "Your reservation has been submitted.",
+    wait_for_email: "Please wait for a confirmation email.",
+    ok: "OK",
+    edit_menu: "edit menu",
+    back: "Back",
+    back_to_top: "Back to top",
+    hero_title_mobile_1: "Here every detail",
+    hero_title_mobile_2: "harmonizes with taste.",
+    hero_title_desktop_1: "Here every",
+    hero_title_desktop_2: " detail harmonizes",
+    hero_title_desktop_3: " with taste.",
+    hero_desc_1: "Our cuisine is a harmonious blend of a passion for cooking and the art of creating signature cocktails that captivate with their depth of flavor.",
+    hero_desc_2: "Every visit is an encounter with professional, discreet service, ensuring your comfort in every moment spent here. The unique interior design creates an atmosphere of intimacy and elegance, conducive to culinary discoveries. The experience is complemented by subtle, unobtrusive background music, allowing you to fully enjoy your shared moments.",
+    hero_desc_mobile: "Our cuisine is a harmonious blend of a passion for cooking and the art of creating signature cocktails that captivate with their depth of flavor. Every visit is an encounter with professional, discreet service, ensuring your comfort in every moment spent here. The unique interior design creates an atmosphere of intimacy and elegance, conducive to culinary discoveries. The experience is complemented by subtle, unobtrusive background music, allowing you to fully enjoy your shared moments.",
+    next: "next"
+  }
+};
+
+const LogoPaths = () => (
+  <>
+    <circle cx="200" cy="200" r="60" />
+    <circle cx="200" cy="200" r="100" />
+    <path d="M 64 40 L 336 40 L 200 221 Z" />
+    <path d="M 200 221 L 200 360" />
+    <path d="M 64 360 L 336 360" />
+  </>
+);
+
+const LogoFragmentAbout = ({ className }: { className?: string }) => (
+  <svg viewBox="100 80 200 200" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" className={className} overflow="visible">
+    <LogoPaths />
+  </svg>
+);
+
+const LogoFragmentMenu = ({ className }: { className?: string }) => (
+  <svg viewBox="50 0 300 150" fill="none" stroke="currentColor" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" className={className} overflow="visible">
+    <LogoPaths />
+  </svg>
+);
+
+const LogoFragmentGallery = ({ className }: { className?: string }) => (
+  <svg viewBox="60 210 280 160" fill="none" stroke="currentColor" strokeWidth="8.5" strokeLinecap="round" strokeLinejoin="round" className={className} overflow="visible">
+    <LogoPaths />
+  </svg>
+);
+
+const LogoFragmentContact = ({ className }: { className?: string }) => (
+  <svg viewBox="50 0 300 400" fill="none" stroke="currentColor" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" className={className} overflow="visible">
+    <LogoPaths />
+  </svg>
+);
+
+const LightboxPortal = ({ children }: { children: ReactNode }) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? createPortal(children, document.body) : null;
+};
+
+const MagneticButton = ({ children, className, onClick }: { children: ReactNode, className?: string, onClick?: () => void }) => {
+  const ref = useRef<HTMLButtonElement>(null);
+
+  const handleMouseMove = (e: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    // Calculate a subtle pull
+    const pullX = x * 0.1;
+    const pullY = y * 0.1;
+    
+    ref.current.style.transform = `translate3d(${pullX}px, ${pullY}px, 0)`;
+    ref.current.style.transition = 'transform 0.1s ease-out';
+  };
+
+  const handleMouseLeave = () => {
+    if (!ref.current) return;
+    ref.current.style.transform = `translate3d(0px, 0px, 0)`;
+    ref.current.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+  };
+
+  return (
+    <button
+      ref={ref}
+      className={className}
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </button>
+  );
+};
+
+interface GalleryCarouselProps {
+  images: string[];
+  id: string;
+}
+
+const GalleryCarousel = ({ images, id }: GalleryCarouselProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const transformRef = useRef<{ x: number, y: number }>({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    // Calculate a subtle pull
+    const pullX = x * 0.04;
+    const pullY = y * 0.04;
+    
+    transformRef.current = { x: pullX, y: pullY };
+    containerRef.current.style.transform = `translate3d(${pullX}px, ${pullY}px, 0)`;
+    containerRef.current.style.transition = 'transform 0.1s ease-out';
+  };
+
+  const handleMouseLeave = () => {
+    if (!containerRef.current) return;
+    containerRef.current.style.transform = `translate3d(0px, 0px, 0)`;
+    containerRef.current.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+    transformRef.current = { x: 0, y: 0 };
+  };
+
+  const nextImage = (e?: ReactMouseEvent) => {
+    if (e) e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e?: ReactMouseEvent) => {
+    if (e) e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const handleClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    
+    // If we have an expanded state, we shouldn't trigger container clicks
+    // Wait, the expanded modal stops propagation, but just to be safe:
+    if (isExpanded) return;
+
+    if (clickX < rect.width * 0.25) {
+      prevImage();
+    } else if (clickX > rect.width * 0.75) {
+      nextImage();
+    } else {
+      setIsExpanded(true);
+    }
+  };
+
+  const handleTouchStart = (e: ReactTouchEvent<HTMLDivElement>) => {
+    setTouchStartX(e.changedTouches[0].screenX);
+  };
+
+  const handleTouchEnd = (e: ReactTouchEvent<HTMLDivElement>) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextImage();
+      else prevImage();
+    }
+  };
+
+  useEffect(() => {
+    if (isExpanded) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isExpanded]);
+
+  return (
+    <>
+      <div 
+        ref={containerRef}
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full h-full rounded-xl overflow-hidden gallery-transition-container group select-none cursor-pointer"
+      >
+        {/* Expand Icon / Navigation Overlay */}
+        <div className="absolute inset-0 z-20 flex pointer-events-none">
+          <div className="w-1/4 h-full group/left flex items-center justify-start px-4 md:px-8">
+            <span className="material-symbols-outlined text-white/40 text-4xl md:text-5xl opacity-0 group-hover/left:opacity-100 transition-opacity drop-shadow-lg">chevron_left</span>
+          </div>
+          <div className="w-2/4 h-full flex items-center justify-center group/center">
+            <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover/center:opacity-100 transition-opacity backdrop-blur-sm shadow-xl">
+              <span className="material-symbols-outlined text-white text-3xl">open_in_full</span>
+            </div>
+          </div>
+          <div className="w-1/4 h-full group/right flex items-center justify-end px-4 md:px-8">
+            <span className="material-symbols-outlined text-white/40 text-4xl md:text-5xl opacity-0 group-hover/right:opacity-100 transition-opacity drop-shadow-lg">chevron_right</span>
+          </div>
+        </div>
+        
+        {/* Images */}
+        {images.map((imgUrl, idx) => (
+          <img 
+            key={imgUrl}
+            alt={`Galeria ${id} ${idx + 1}`} 
+            className={`gallery-image ${idx === currentIndex ? 'active' : ''}`} 
+            src={imgUrl} 
+          />
+        ))}
+        
+        {/* Image Indicators */}
+        <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2 md:gap-3">
+          {images.map((_, idx) => (
+            <button 
+              key={idx}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex(idx);
+              }}
+              className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white transition-all duration-300 indicator ${idx === currentIndex ? 'opacity-100' : 'opacity-40'}`} 
+            />
+          ))}
+        </div>
+      </div>
+
+      {isExpanded && (
+        <LightboxPortal>
+          <div 
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Close button slightly outside the image border */}
+            <div className="absolute inset-0 cursor-pointer" onClick={() => setIsExpanded(false)} />
+            
+            <div className="relative w-full h-full max-w-7xl mx-auto flex items-center justify-center pointer-events-none">
+              {/* Box for image with close button */}
+              <div className="relative w-auto h-auto max-w-full max-h-full pointer-events-auto">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(false);
+                  }}
+                  className="absolute -top-4 -right-4 md:-top-6 md:-right-6 w-10 h-10 md:w-12 md:h-12 bg-black border-2 border-white/20 rounded-full flex items-center justify-center text-white transition-all z-[60] cursor-pointer shadow-xl pointer-events-auto"
+                >
+                  <span className="material-symbols-outlined text-xl md:text-2xl pointer-events-none">close</span>
+                </button>
+
+                <img 
+                  src={images[currentIndex]} 
+                  alt={`Powiększona galeria ${id} ${currentIndex + 1}`}
+                  className="max-w-full max-h-[85vh] md:max-h-[80vh] object-contain rounded-xl shadow-2xl relative z-40 select-none pointer-events-none"
+                />
+
+                {/* Left/Right Navigation Areas */}
+                <div 
+                  className="absolute inset-y-0 -left-12 md:-left-24 right-1/2 cursor-w-resize z-50 flex items-center justify-start group/navl"
+                  onClick={prevImage}
+                >
+                  <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover/navl:opacity-100 transition-opacity backdrop-blur-md ml-4 md:ml-0 text-white">
+                    <span className="material-symbols-outlined">chevron_left</span>
+                  </div>
+                </div>
+                
+                <div 
+                  className="absolute inset-y-0 left-1/2 -right-12 md:-right-24 cursor-e-resize z-50 flex items-center justify-end group/navr"
+                  onClick={nextImage}
+                >
+                  <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover/navr:opacity-100 transition-opacity backdrop-blur-md mr-4 md:mr-0 text-white">
+                    <span className="material-symbols-outlined">chevron_right</span>
+                  </div>
+                </div>
+
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-2">
+                  {images.map((_, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentIndex(idx);
+                      }}
+                      className={`w-2 h-2 rounded-full bg-white transition-all duration-300 ${idx === currentIndex ? 'opacity-100 scale-125' : 'opacity-40'}`} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </LightboxPortal>
+      )}
+    </>
+  );
+};
+
+function Home() {
+  const { lang, setLang } = useContext(LanguageContext);
+  const t = translations[lang];
+  const navigate = useNavigate();
+  const [isReservationOpen, setIsReservationOpen] = useState(false);
+  const [isReservationSuccessOpen, setIsReservationSuccessOpen] = useState(false);
+  // State hooks
+  const [reservationData, setReservationData] = useState({ name: '', phone: '', date: '', time: '13:00', people: '2', email: '' });
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileHamburgerColor, setMobileHamburgerColor] = useState('text-[#e9e0da]');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleMainScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+
+      const sections = ['home', 'about', 'gallery', 'menu', 'contact'];
+      let activeSection = null;
+      for (const id of sections) {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 50 && rect.bottom >= 50) {
+            activeSection = id;
+            break;
+          }
+        }
+      }
+
+      if (activeSection === 'home' || activeSection === 'about' || activeSection === 'contact') {
+        setMobileHamburgerColor('text-[#e9e0da]');
+      } else if (activeSection === 'gallery' || activeSection === 'menu') {
+        setMobileHamburgerColor('text-[#571723]');
+      }
+    };
+    window.addEventListener('scroll', handleMainScroll, { passive: true });
+    handleMainScroll();
+    return () => window.removeEventListener('scroll', handleMainScroll);
+  }, []);
+
+  useEffect(() => {
+    // --- Parallax Background Animation ---
+    const handleParallaxScroll = () => {
+      const windowHeight = window.innerHeight;
+      const parallaxElements = document.querySelectorAll('.parallax-line-group');
+      parallaxElements.forEach((el) => {
+        const speed = parseFloat(el.getAttribute('data-speed') || '0.2');
+        const parent = el.closest('section');
+        if (parent) {
+          const rect = parent.getBoundingClientRect();
+          const distFromCenter = (rect.top + rect.height / 2) - (windowHeight / 2);
+          const offset = -distFromCenter * speed;
+          (el as HTMLElement).style.transform = `translateY(${offset}px)`;
+        }
+      });
+    };
+    
+    window.addEventListener('scroll', handleParallaxScroll, { passive: true });
+    handleParallaxScroll();
+
+    // --- Store animation frame ID for cleanup ---
+    let animationFrameId: number | null = null;
+    let handleResize: () => void;
+    let mouseMoveHandler: (e: MouseEvent) => void;
+    let mouseLeaveHandler: () => void;
+    
+    // --- Interactive Section Elements ---
+    const interactiveSection = document.getElementById('interactive-plates');
+    const plates = document.querySelectorAll<HTMLElement>('.hummus-plate');
+    
+    if (interactiveSection && plates.length > 0) {
+      const MAX_DISTANCE = 300;
+      const ACTIVATION_RADIUS = 150;
+      const LERP_FOLLOW = 0.12;
+      const BOUNDARY_SOFTNESS = 0.85;
+      const ATTRACTION_DURATION = 800;
+      const RETURN_DURATION = 1200;
+
+      const plateControllers = Array.from(plates).map((plate) => {
+        let originX = 0, originY = 0, currentX = 0, currentY = 0, targetX = 0, targetY = 0;
+        let isCaptured = false, attractionStartTime: number | null = null, attractionStartX = 0, attractionStartY = 0;
+        let returnStartTime: number | null = null, returnStartX = 0, returnStartY = 0;
+
+        const updateBasePosition = () => {
+          if (plate.parentElement && interactiveSection) {
+            const parentRect = plate.parentElement.getBoundingClientRect();
+            const sectionRect = interactiveSection.getBoundingClientRect();
+            originX = (parentRect.left - sectionRect.left) + (parentRect.width / 2);
+            originY = (parentRect.top - sectionRect.top) + (parentRect.height / 2);
+            if (!isCaptured && !returnStartTime) {
+              currentX = originX; currentY = originY;
+            }
+          }
+        };
+
+        const easeInQuad = (t: number) => t * t;
+        const easeInOutSine = (x: number) => -(Math.cos(Math.PI * x) - 1) / 2;
+
+        return {
+          plate, updateBasePosition,
+          update: (mouseX: number, mouseY: number) => {
+            const dx = mouseX - originX;
+            const dy = mouseY - originY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (!isCaptured && dist < ACTIVATION_RADIUS) {
+              isCaptured = true; returnStartTime = null;
+              attractionStartTime = performance.now();
+              attractionStartX = currentX; attractionStartY = currentY;
+            }
+
+            if (isCaptured) {
+              if (dist < MAX_DISTANCE) {
+                const ratio = dist / MAX_DISTANCE;
+                const factor = Math.pow(1 - ratio, BOUNDARY_SOFTNESS);
+                const isMobile = window.innerWidth < 768;
+                const movementMultiplier = isMobile ? 0.3 : 1.0;
+                const dampening = (0.2 + (0.8 * factor)) * movementMultiplier;
+                targetX = originX + (dx * dampening);
+                targetY = originY + (dy * dampening);
+                
+                if (attractionStartTime) {
+                  const progress = Math.min((performance.now() - attractionStartTime) / ATTRACTION_DURATION, 1);
+                  currentX = attractionStartX + (targetX - attractionStartX) * easeInQuad(progress);
+                  currentY = attractionStartY + (targetY - attractionStartY) * easeInQuad(progress);
+                  if (progress >= 1) attractionStartTime = null;
+                } else {
+                  currentX += (targetX - currentX) * LERP_FOLLOW;
+                  currentY += (targetY - currentY) * LERP_FOLLOW;
+                }
+              } else {
+                isCaptured = false; attractionStartTime = null;
+                returnStartTime = performance.now();
+                returnStartX = currentX; returnStartY = currentY;
+              }
+            } else if (returnStartTime) {
+              const progress = Math.min((performance.now() - returnStartTime) / RETURN_DURATION, 1);
+              currentX = returnStartX + (originX - returnStartX) * easeInOutSine(progress);
+              currentY = returnStartY + (originY - returnStartY) * easeInOutSine(progress);
+              if (progress >= 1) { returnStartTime = null; currentX = originX; currentY = originY; }
+            }
+            plate.style.transform = `translate3d(${currentX - originX}px, ${currentY - originY}px, 0)`;
+          },
+          release: () => {
+            if (isCaptured) {
+              isCaptured = false; attractionStartTime = null;
+              returnStartTime = performance.now(); returnStartX = currentX; returnStartY = currentY;
+            }
+          }
+        };
+      });
+
+      let mouseX = -1000, mouseY = -1000;
+      
+      handleResize = () => plateControllers.forEach(c => c.updateBasePosition());
+      
+      mouseMoveHandler = (e: MouseEvent) => {
+        const rect = interactiveSection.getBoundingClientRect();
+        mouseX = e.clientX - rect.left; 
+        mouseY = e.clientY - rect.top;
+      };
+      
+      mouseLeaveHandler = () => {
+        mouseX = -1000; 
+        mouseY = -1000;
+        plateControllers.forEach(c => c.release());
+      };
+
+      interactiveSection.addEventListener('mousemove', mouseMoveHandler);
+      interactiveSection.addEventListener('mouseleave', mouseLeaveHandler);
+      window.addEventListener('resize', handleResize);
+      
+      handleResize(); // Initialize positions
+      
+      const animatePlates = () => {
+        plateControllers.forEach(c => c.update(mouseX, mouseY));
+        animationFrameId = requestAnimationFrame(animatePlates);
+      };
+      
+      animationFrameId = requestAnimationFrame(animatePlates);
+    }
+
+    // --- Cleanup function ---
+    return () => {
+      window.removeEventListener('scroll', handleParallaxScroll);
+      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+      
+      if (handleResize) window.removeEventListener('resize', handleResize);
+      
+      if (interactiveSection) {
+        if (mouseMoveHandler) interactiveSection.removeEventListener('mousemove', mouseMoveHandler);
+        if (mouseLeaveHandler) interactiveSection.removeEventListener('mouseleave', mouseLeaveHandler);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="bg-surface text-on-background font-body-md antialiased selection:bg-tertiary-container selection:text-on-tertiary-container">
+      {/* Mobile Scroll to Top Arrow (Fixed) */}
+      <a 
+        href="#" 
+        aria-label={t.back_to_top} 
+        onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); setIsMobileMenuOpen(false); }}
+        className={`md:hidden fixed top-4 left-4 z-[60] w-11 h-11 flex items-center justify-start transition-all duration-500 ${isScrolled ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} ${mobileHamburgerColor}`}
+      >
+        <span className="material-symbols-outlined text-3xl drop-shadow-md">keyboard_arrow_up</span>
+      </a>
+
+      {/* Mobile Hamburger Menu (Fixed) */}
+      <button 
+        aria-label="Toggle menu" 
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className={`md:hidden fixed top-4 right-4 z-[60] w-11 h-11 flex items-center justify-end transition-colors duration-300 ${mobileHamburgerColor}`}
+      >
+        <span className="material-symbols-outlined text-3xl drop-shadow-md">
+          {isMobileMenuOpen ? 'close' : 'menu'}
+        </span>
+      </button>
+
+      {/* Mobile Menu Dropdown Overlay */}
+      <div 
+        className={`fixed inset-0 z-[54] md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      ></div>
+
+      {/* Mobile Menu Dropdown Wrapper to add border */}
+      <div 
+        className={`fixed top-[56px] right-4 z-[55] bg-[#571723] border-[2px] border-[#e9e0da]/30 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 origin-top-right md:hidden shadow-xl ${isMobileMenuOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}
+        style={{ width: 'max(20vw, 100px)', padding: '16px 0' }}
+      >
+        <nav className="flex flex-col gap-4 text-center w-full">
+          <div className="w-full"><a className="text-base font-['Brygada_1918'] text-[#e9e0da] transition-transform active:scale-95 inline-block nav-link-animated pb-1" href="#about" onClick={() => setIsMobileMenuOpen(false)}>{t.about_us}</a></div>
+          <div className="w-full"><a className="text-base font-['Brygada_1918'] text-[#e9e0da] transition-transform active:scale-95 inline-block nav-link-animated pb-1" href="#gallery" onClick={() => setIsMobileMenuOpen(false)}>{t.gallery}</a></div>
+          <div className="w-full"><a className="text-base font-['Brygada_1918'] text-[#e9e0da] transition-transform active:scale-95 inline-block nav-link-animated pb-1" href="#menu" onClick={() => setIsMobileMenuOpen(false)}>{t.menu}</a></div>
+          <div className="w-full"><a className="text-base font-['Brygada_1918'] text-[#e9e0da] transition-transform active:scale-95 inline-block nav-link-animated pb-1" href="#contact" onClick={() => setIsMobileMenuOpen(false)}>{t.contact}</a></div>
+          <div className="w-full mt-2">
+            <div className="flex gap-2 items-center justify-center text-[#e9e0da] font-['Brygada_1918'] font-semibold text-base">
+              <button onClick={() => {setLang('pl'); setIsMobileMenuOpen(false);}} className={`transition-opacity ${lang === 'pl' ? 'opacity-100' : 'opacity-50'}`}>PL</button>
+              <span>&nbsp;&nbsp;</span>
+              <button onClick={() => {setLang('en'); setIsMobileMenuOpen(false);}} className={`transition-opacity ${lang === 'en' ? 'opacity-100' : 'opacity-50'}`}>EN</button>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      {/* Header - Hidden on Mobile */}
+      <header className="hidden md:block fixed top-0 w-full z-50 backdrop-blur-md border-b border-outline-variant/20 bg-[#e9e0da] shadow-md transition-all duration-300" id="main-nav">
+        <div className="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto relative h-[80px]">
+          <a className="z-10 flex items-center justify-center w-[40px] group cursor-pointer translate-y-[3px]" href="#" aria-label={t.back_to_top} onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <span className={`material-symbols-outlined text-[#571723] text-2xl leading-none transition-all duration-500 ${isScrolled ? 'opacity-100 group-hover:-translate-y-1' : 'opacity-0 pointer-events-none'}`}>keyboard_arrow_up</span>
+          </a>
+          <nav className="flex gap-8 justify-center flex-1 items-center h-full">
+            <a className="text-xl font-semibold transition-all font-['Brygada_1918'] text-[#571723] nav-link-animated translate-y-[3px]" href="#about">{t.about_us}</a>
+            <a className="text-xl font-semibold transition-all font-['Brygada_1918'] text-[#571723] nav-link-animated translate-y-[3px]" href="#gallery">{t.gallery}</a>
+            <a className="text-xl font-semibold transition-all font-['Brygada_1918'] text-[#571723] nav-link-animated translate-y-[3px]" href="#menu">{t.menu}</a>
+            <a className="text-xl font-semibold transition-all font-['Brygada_1918'] text-[#571723] nav-link-animated translate-y-[3px]" href="#contact">{t.contact}</a>
+          </nav>
+          <div className="w-[80px] flex gap-2 items-center justify-end text-[#571723] font-['Brygada_1918'] font-semibold text-xl translate-y-[3px]">
+            <button onClick={() => setLang('pl')} className={`transition-opacity ${lang === 'pl' ? 'opacity-100' : 'opacity-50'}`}>PL</button>
+            <span>&nbsp;&nbsp;</span>
+            <button onClick={() => setLang('en')} className={`transition-opacity ${lang === 'en' ? 'opacity-100' : 'opacity-50'}`}>EN</button>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative min-h-[calc(100dvh+50px)] md:min-h-screen flex items-center justify-center overflow-hidden bg-[#571723]" id="home">
+        {/* Tło wideo */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/wideo_tlo.mp4" type="video/mp4" />
+        </video>
+        {/* Subtelny overlay, żeby tekst był czytelny */}
+        <div className="absolute inset-0 bg-black/30 z-0"></div>
+
+        <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col items-center text-center w-full">
+          <div className="w-full flex flex-col items-center justify-center animate-fade-in-up -translate-y-[30px] md:-translate-y-[15px]">
+            <img alt="NOLA Full Logo" className="w-full max-w-[500px] h-auto transition-transform duration-[1000ms] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)] hover:scale-110 will-change-transform mx-auto filter-beige" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoFOQnNMMNHq6yoo_F1VB-RNYleHqut6evT1x7ZHw1Jz8P0w4xtOAOIZOWIMDaayIvZxXJqdV-6H_AvR9DhU1bpZTmjPSqBtUaIR55c0tB5N-m--I2woKXARO_Ft5lxB8q8XTrRa_4v4TInuWsJgmaHpbQgSUMD9ZzMc_RqGARmvdX-QiXZIRvUiX0FCiW4v6S5zk_43Gq7Np5npk3HjvYCl7wpAeNsSLFWRRr45At-MeCSy_uTp4Sz3zurUA8qjh_M33oKmzIeS0" />
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById('menu');
+                if (el) el.scrollIntoView({behavior: 'smooth'});
+              }}
+              className="mt-[100px] px-8 py-3 rounded-xl border border-[#e9e0da] text-[#e9e0da] font-label-sm tracking-widest uppercase hover:bg-[#e9e0da] hover:text-[#571723] transition-colors duration-300 inline-block cursor-pointer"
+            >
+              <span className="block md:hidden">{t.view_menu}</span>
+              <span className="hidden md:block">{t.view_menu}</span>
+            </button>
+          </div>
+        </div>
+        <div className="absolute bottom-[65px] md:bottom-[25px] left-0 w-full flex justify-center z-20 pointer-events-none">
+          <MagneticButton 
+            className="btn-dalej cursor-pointer flex flex-col items-center justify-center gap-1 group mx-0 p-0 pointer-events-auto" 
+            onClick={() => {
+              const el = document.getElementById('about');
+              if (el) el.scrollIntoView({behavior: 'smooth'});
+            }}
+          >
+            <span className="font-label-sm text-xs uppercase text-white translate-y-[10px] md:translate-y-0">{t.next}</span>
+            <span className="material-symbols-outlined text-lg leading-none transition-transform duration-500 group-hover:translate-y-1 text-white">keyboard_arrow_down</span>
+          </MagneticButton>
+        </div>
+      </section>
+
+      {/* Our Heritage Section */}
+      <section className="relative overflow-hidden flex flex-col items-center justify-center h-[calc(100dvh+50px)] md:h-[calc(100vh-80px)] md:min-h-0 bg-[#571723] md:scroll-mt-[80px]" id="about">
+        <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop w-full flex-1 flex flex-col pt-12 md:pt-24 pb-16 md:pb-20">
+          {/* Title fixed from top */}
+          <div className="w-full flex justify-center shrink-0 mb-4 md:mb-12">
+            <span className="font-display-lg text-3xl md:text-4xl text-[#e9e0da] tracking-normal block text-center" style={{ fontFamily: '"Brygada 1918", serif' }}>{t.about_us}</span>
+          </div>
+          {/* Content centered in remaining space */}
+          <div className="flex-1 w-full flex flex-col justify-center items-center min-h-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-12 items-center w-full max-w-[1100px] mx-auto text-center md:text-left h-full min-h-0">
+            <div className="space-y-3 md:space-y-6 flex flex-col justify-center items-center md:items-start text-center md:text-left h-full">
+              <div className="w-min md:w-full space-y-3 md:space-y-6 mx-auto md:mx-0">
+                <h2 className="font-['Brygada_1918'] text-[#e9e0da] text-[26px] sm:text-[32px] md:text-[44px] lg:text-[48px] leading-[1.1]" style={{ letterSpacing: '-0.02em' }}>
+                  {/* Mobile Version */}
+                  <span className="block md:hidden whitespace-nowrap">{t.hero_title_mobile_1}</span>
+                  <span className="block md:hidden">{t.hero_title_mobile_2}</span>
+                  
+                  {/* Desktop Version */}
+                  <span className="hidden md:block">
+                    {t.hero_title_desktop_1}<div className="inline md:block">{t.hero_title_desktop_2}</div><div className="inline md:block">{t.hero_title_desktop_3}</div>
+                  </span>
+                </h2>
+                <div className="font-body-lg text-[#e9e0da] text-[13px] sm:text-sm md:text-base leading-snug md:leading-relaxed md:max-w-[480px]">
+                  {/* Desktop */}
+                  <div className="hidden md:block space-y-3">
+                    <p>
+                      {t.hero_desc_1}
+                    </p>
+                    <p>
+                      {t.hero_desc_2}
+                    </p>
+                  </div>
+                  {/* Mobile */}
+                  <p className="block md:hidden text-center mt-3 text-[12px]">
+                    {t.hero_desc_mobile}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="relative overflow-hidden flex items-center justify-center w-full min-h-0 max-h-[30vh] sm:max-h-[35vh] md:max-h-none rounded-xl -translate-y-[35px] md:translate-y-0">
+              <img alt="Premium gourmet dish at NOLA restaurant" className="w-full h-full md:h-auto rounded-xl shadow-lg object-cover aspect-[4/3] max-w-[270px] sm:max-w-[320px] md:max-w-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZQYiV4_z5KT5LpeN2Jhqs0o_e-L7WcHo-6iIH2zT4sVne6IbYossoc48-xH75lgcPkJTqXUUWqRXfT7XR8RhmRbHxcqNEKU8efLE3yWvFEUqQmIZbBOPSC9Ua037OU7GaRc91NanjK5qEv9M8LfULI_JooAcbSghnoxmCk6TP-oQrLwP30VwnA_ApjYusJmtNZMFz9QiGeEXuSNDVhKHWUJQnN25TaQoLzTbTljTiNEnFKYJmDSATiD0arwsvKjgH15ERJXlTAQo" />
+            </div>
+          </div>
+          </div>
+        </div>
+        <div className="absolute bottom-[65px] md:bottom-8 left-0 w-full flex justify-center z-20 pointer-events-none">
+          <MagneticButton 
+            className="btn-dalej cursor-pointer flex flex-col items-center justify-center gap-1 group mx-0 p-0 pointer-events-auto" 
+            onClick={() => {
+              const el = document.getElementById('gallery');
+              if (el) el.scrollIntoView({behavior: 'smooth'});
+            }}
+          >
+            <span className="font-label-sm text-xs uppercase text-white translate-y-[10px] md:translate-y-0">{t.next}</span>
+            <span className="material-symbols-outlined text-lg leading-none transition-transform duration-500 group-hover:translate-y-1 text-white">keyboard_arrow_down</span>
+          </MagneticButton>
+        </div>
+      </section>
+
+      {/* Visual Diary Section - Gallery Carousel */}
+      <section className="relative overflow-hidden flex flex-col items-center justify-center h-[calc(100dvh+50px)] md:h-[calc(100vh-80px)] md:min-h-0 bg-[#e9e0da] md:scroll-mt-[80px]" id="gallery">
+        <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop w-full flex-1 flex flex-col pt-12 md:pt-24 pb-16 md:pb-20 min-h-0">
+          {/* Title fixed from top */}
+          <div className="w-full flex justify-center shrink-0 mb-4 md:mb-12">
+            <span className="font-display-lg text-3xl md:text-4xl text-[#571723] tracking-normal block text-center" style={{ fontFamily: '"Brygada 1918", serif' }}>{t.gallery}</span>
+          </div>
+
+          {/* Content centered in remaining space */}
+          <div className="flex-1 w-full flex flex-col justify-center items-center min-h-0">
+            <div className="grid grid-cols-1 grid-rows-3 md:grid-cols-2 md:grid-rows-2 gap-4 md:gap-8 w-full max-w-[1100px] mx-auto items-stretch h-[75%] md:h-full min-h-0">
+              
+              {/* Top Left Gallery */}
+              <div className="w-full h-full min-h-0 md:col-start-1 md:row-start-1 md:col-span-1 md:row-span-1">
+                <GalleryCarousel 
+                  id="gallery-vibe" 
+                  images={[
+                    "/food-1.jpg?v=2",
+                    "/food-2.jpg?v=2",
+                    "/food-3.jpg?v=2"
+                  ]}
+                />
+              </div>
+
+              {/* Bottom Left Gallery */}
+              <div className="w-full h-full min-h-0 md:col-start-1 md:row-start-2 md:col-span-1 md:row-span-1">
+                <GalleryCarousel 
+                  id="gallery-dishes" 
+                  images={[
+                    "/cocktail-1.jpg?v=7",
+                    "/cocktail-2.jpg?v=7",
+                    "/cocktail-3.jpg?v=7"
+                  ]}
+                />
+              </div>
+
+              {/* Right vertical gallery */}
+              <div className="w-full h-full min-h-0 md:col-start-2 md:row-start-1 md:col-span-1 md:row-span-2">
+                <GalleryCarousel 
+                  id="gallery-bar" 
+                  images={[
+                    "/Gemini_Generated_Image_ca66sqca66sqca66.jpeg",
+                    "/Gemini_Generated_Image_kkrf3dkkrf3dkkrf.jpeg",
+                    "/Gemini_Generated_Image_sxvprnsxvprnsxvp.jpeg"
+                  ]}
+                />
+              </div>
+              
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-[65px] md:bottom-8 left-0 w-full flex justify-center z-20 pointer-events-none">
+          <MagneticButton 
+            className="btn-dalej cursor-pointer flex flex-col items-center justify-center gap-1 group mx-0 p-0 pointer-events-auto" 
+            onClick={() => {
+              const el = document.getElementById('menu');
+              if (el) el.scrollIntoView({behavior: 'smooth'});
+            }}
+          >
+            <span className="font-label-sm text-xs uppercase text-[#571723] translate-y-[10px] md:translate-y-0">{t.next}</span>
+            <span className="material-symbols-outlined text-lg leading-none transition-transform duration-500 group-hover:translate-y-1 text-[#571723]">keyboard_arrow_down</span>
+          </MagneticButton>
+        </div>
+      </section>
+
+      {/* Menu Highlight Section / Interactive Gallery */}
+      <section className="bg-white relative overflow-hidden flex flex-col items-center justify-center h-[calc(100dvh+50px)] md:h-[calc(100vh-80px)] md:min-h-0 md:scroll-mt-[80px]" id="menu">
+        <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop w-full flex-1 flex flex-col pt-12 md:pt-24 pb-16 md:pb-20 min-h-0">
+          {/* Title fixed from top */}
+          <div className="w-full flex justify-center shrink-0 mb-4 md:mb-12">
+            <span className="font-display-lg text-3xl md:text-4xl text-[#571723] tracking-normal block text-center" style={{ fontFamily: '"Brygada 1918", serif' }}>{t.menu}</span>
+          </div>
+          {/* The Plates */}
+          <div className="flex-1 w-full flex flex-col justify-center items-center min-h-0 mb-0 md:mb-0">
+            <div className="flex-none flex flex-col md:flex-row justify-center items-center gap-6 sm:gap-8 md:gap-12 lg:gap-16 w-full section-interactive-area z-10 h-full min-h-0" id="interactive-plates">
+              
+              <div className="flex flex-col items-center justify-center min-h-0">
+                <span className="font-['Brygada_1918'] font-semibold tracking-widest uppercase text-[#571723] text-[16px] sm:text-[24px] md:text-[24px] mb-2 md:mb-12 whitespace-nowrap" style={{ height: 'auto' }}>{t.food}</span>
+                <div 
+                  className="relative flex justify-center items-center w-[200px] sm:w-[250px] md:w-[475px] md:h-[475px] aspect-square z-0 cursor-pointer group"
+                  onClick={() => {
+                    window.scrollTo(0,0);
+                    navigate('/menu/food');
+                  }}
+                >
+                  <div 
+                    className="absolute inset-0 bg-[#e9e0da]"
+                    style={{
+                      WebkitMaskImage: "url('/plate-frame.svg')",
+                      WebkitMaskSize: "contain",
+                      WebkitMaskRepeat: "no-repeat",
+                      WebkitMaskPosition: "center",
+                      maskImage: "url('/plate-frame.svg')",
+                      maskSize: "contain",
+                      maskRepeat: "no-repeat",
+                      maskPosition: "center"
+                    }}
+                  />
+                  <div className="absolute w-[260px] sm:w-[350px] md:w-[465px] h-[260px] sm:h-[350px] md:h-[465px] flex items-center justify-center pointer-events-none z-10 -translate-y-[5px] md:translate-y-0 transition-transform duration-500 group-hover:scale-105">
+                    <img alt="Autorskie potrawy NOLA" className="hummus-plate w-full h-full rounded-xl object-cover absolute scale-[0.60] md:scale-[0.75]" id="hummus-plate-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGlh86wFS0wA6TGIChzSgFGV6OS7Ifs2E0VfHwOetD8VGmjqBkiDgoMLfKITZxPrq9H6P6ZHHUo1HWVccKWM5QGV8Rx6oPxu0GjI2W-NglPAq5WnyQi6Shi5Z4cPyk1ykL48pOTMl-GMVya7CU4GXtDhlmNWxwVPSJwui7I2Tj5F8iUW5jPsQDcKbp0OWrtO2nvVytDl7YOjGCHYC7JkIM-Oiht5SZX8LfA8UkUqJpmvA7N-V4L61jdvR5p-HnmCQryEN0Fon9fuc" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center justify-center min-h-0 -translate-y-[15px] md:translate-y-0">
+                <span className="font-['Brygada_1918'] font-semibold tracking-widest uppercase text-[#571723] text-[16px] sm:text-[24px] md:text-[24px] mb-2 md:mb-12 whitespace-nowrap" style={{ height: 'auto' }}>{t.cocktails}</span>
+                <div 
+                  className="relative flex justify-center items-center w-[200px] sm:w-[250px] md:w-[475px] md:h-[475px] aspect-square z-0 cursor-pointer group"
+                  onClick={() => {
+                    window.scrollTo(0, 0);
+                    navigate('/menu/cocktails');
+                  }}
+                >
+                  <div 
+                    className="absolute inset-0 bg-[#e9e0da]"
+                    style={{
+                      WebkitMaskImage: "url('/cocktail-frame.svg')",
+                      WebkitMaskSize: "contain",
+                      WebkitMaskRepeat: "no-repeat",
+                      WebkitMaskPosition: "center",
+                      maskImage: "url('/cocktail-frame.svg')",
+                      maskSize: "contain",
+                      maskRepeat: "no-repeat",
+                      maskPosition: "center"
+                    }}
+                  />
+                  <div className="absolute w-[260px] sm:w-[350px] md:w-[465px] h-[260px] sm:h-[350px] md:h-[465px] flex items-center justify-center pointer-events-none z-10 transition-transform duration-500 group-hover:scale-105">
+                    <img alt="Autorski koktajl NOLA" className="hummus-plate w-full h-full object-contain absolute mix-blend-multiply scale-[0.83] md:scale-[1.18] rounded-xl" id="hummus-plate-2" src="/cocktail_button.png?v=refresh1" />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-[65px] md:bottom-8 left-0 w-full flex justify-center z-20 pointer-events-none">
+          <MagneticButton 
+            className="btn-dalej cursor-pointer flex flex-col items-center justify-center gap-1 group mx-0 p-0 pointer-events-auto" 
+            onClick={() => {
+              const el = document.getElementById('contact');
+              if (el) el.scrollIntoView({behavior: 'smooth'});
+            }}
+          >
+            <span className="font-label-sm text-xs uppercase text-[#571723] translate-y-[10px] md:translate-y-0">{t.next}</span>
+            <span className="material-symbols-outlined text-lg leading-none transition-transform duration-500 group-hover:translate-y-1 text-[#571723]">keyboard_arrow_down</span>
+          </MagneticButton>
+        </div>
+      </section>
+
+      {/* Reservation CTA */}
+      <section className="text-center relative overflow-hidden flex flex-col items-center justify-center h-[calc(100dvh+50px)] md:h-[calc(100vh-80px)] md:min-h-0 bg-[#571723] md:scroll-mt-[80px]" id="contact">
+        <div className="absolute inset-0 bg-black/20 z-0 hidden md:block"></div>
+        <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop w-full flex-1 flex flex-col pt-12 md:pt-24 pb-16 md:pb-20 min-h-0">
+          {/* Title fixed from top */}
+          <div className="w-full flex justify-center shrink-0 mb-4 md:mb-12">
+            <span className="font-display-lg text-3xl md:text-4xl text-[#e9e0da] tracking-normal block text-center" style={{ fontFamily: '"Brygada 1918", serif' }}>{t.contact}</span>
+          </div>
+          <div className="flex-1 w-full flex flex-col justify-center items-center min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-center justify-items-center w-full max-w-[1100px] mx-auto h-full min-h-0">
+              {/* Column 1: Logo & Address */}
+              <div className="flex flex-col items-center justify-center space-y-1 md:space-y-12 text-center md:h-[435px] py-0 md:py-4 w-full h-full min-h-0 shrink">
+              <div className="flex items-center justify-center w-full">
+                <button 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+                  className="bg-transparent border-none p-0 outline-none m-0 shadow-none cursor-pointer focus:outline-none appearance-none tap-highlight-transparent hover:transform-none active:transform-none"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label={t.back_to_top}
+                >
+                  <img alt="NOLA Logo" className="h-auto object-contain transform md:scale-110 block filter-beige mx-auto w-[180px] md:w-full md:max-w-[320px]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjUqukmy_diKG__Y2yTmRzoO41sHZOjMIshtBpntnhu08tGJEZpahC_h9dsGlp9cgrKtkSsILhUrrOfYT66gdYod3LauexIURBkB7MyXbEF3EbldL-KTE56rGl90aeOKZQ_KzYGenTHnZdnKs36-uNiADc-2mdRE-wYDSSmqmHOjGG3PM7hJoVsBHfcSUXjo6nK28u4g4pltTU8GmScEPte7gzTN-tUPcx_k1yF9gXx6Fgmv9JJE2tM-szYu4-wbJ2trVSfPHyi7o" />
+                </button>
+              </div>
+              <div className="text-[#e9e0da] font-body-md text-[11px] md:text-lg opacity-90 text-center w-[220px] md:w-full leading-tight md:leading-relaxed mt-0 md:mt-0">
+                <p className="whitespace-nowrap md:whitespace-normal text-[13px]">ul. Ducha Św. 3, 87-100 Toruń</p>
+                <div><a href="tel:+48533985144" className="transition-opacity font-bold text-[13px] leading-[23.75px]">tel. +48 533 985 144</a></div>
+              </div>
+            </div>
+
+            {/* Column 2: Hours & Button */}
+            <div className="flex flex-col items-center justify-center md:h-[400px] w-full h-full min-h-0 shrink -translate-y-[15px] md:translate-y-0">
+              <div className="flex flex-col items-center justify-center flex-1 shrink-0 w-full">
+                <div className="grid grid-cols-[auto_auto] gap-x-1.5 md:gap-x-3 mx-auto w-max mb-0 md:mb-8 text-[#e9e0da]">
+                  {/* Headers */}
+                  <div className="text-right font-display-lg text-[16px] md:text-2xl font-bold tracking-widest uppercase pb-1 md:pb-10">
+                    {t.hours_open_1}
+                  </div>
+                  <div className="text-left font-display-lg text-[16px] md:text-2xl font-bold tracking-widest uppercase pb-1 md:pb-10">
+                    {t.hours_open_2}
+                  </div>
+
+                  {/* Row 1 */}
+                  <div className="text-right font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0.5 md:pb-2.5">{t.mon_thu}</div>
+                  <div className="text-left font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0.5 md:pb-2.5">13:00 - 23:00</div>
+
+                  {/* Row 2 */}
+                  <div className="text-right font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0.5 md:pb-2.5">{t.friday}</div>
+                  <div className="text-left font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0.5 md:pb-2.5">13:00 - 00:00</div>
+
+                  {/* Row 3 */}
+                  <div className="text-right font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0.5 md:pb-2.5">{t.saturday}</div>
+                  <div className="text-left font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0.5 md:pb-2.5">12:00 - 00:00</div>
+
+                  {/* Row 4 */}
+                  <div className="text-right font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0 md:mb-0">{t.sunday}</div>
+                  <div className="text-left font-body-md text-[11px] md:text-lg opacity-90 whitespace-nowrap leading-tight md:leading-[18px] pb-0 md:mb-0">12:00 - 22:00</div>
+                </div>
+                <div className="w-full flex justify-center mt-2 mb-0 md:my-0 text-center">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsReservationOpen(true);
+                    }}
+                    className="py-2.5 sm:py-3 md:py-3 rounded-lg md:rounded-xl border border-[#e9e0da] text-[#e9e0da] font-label-sm text-[14px] sm:text-[15px] md:text-base tracking-widest uppercase hover:bg-[#e9e0da] hover:text-[#571723] transition-colors duration-300 inline-block cursor-pointer text-center whitespace-nowrap shrink-0 w-[220px] md:w-auto md:px-8"
+                  >
+                    {t.book_table_upper}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 3: Map */}
+            <div className="flex flex-col items-center justify-center w-full h-full py-0 min-h-0 shrink -translate-y-[15px] md:translate-y-0">
+              <div className="relative w-[220px] h-[174px] md:w-full md:max-w-[400px] md:h-[400px] rounded-xl border border-[#e9e0da]/20 overflow-hidden shadow-lg mx-auto shrink-0 -translate-y-[10px] md:translate-y-0">
+                <iframe allowFullScreen height="100%" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2399.345678901234!2d18.6045678!3d53.0101234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470334e678901234%3A0x1234567890abcdef!2zRHVjaGEgxZp3acSZdGVnbyAzLCA4Ny0xMDAgVG9ydcWE!5e0!3m2!1spl!2spl!4v1710000000000!5m2!1spl!2spl&q=NOLA+Restauracja+%26+Cocktail+Bar" style={{ border: 0, filter: 'grayscale(0.2) contrast(1.1)' }} width="100%"></iframe>
+                <div className="absolute inset-0 pointer-events-none border border-[#e9e0da]/10 rounded-xl"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Social Links pod spodem inside flow */}
+          <div className="flex gap-8 sm:gap-24 w-full max-w-[600px] justify-center mx-auto mt-2 md:mt-12 pointer-events-auto items-center shrink-0 -translate-y-[15px] md:translate-y-0">
+            <a className="text-[#e9e0da] transition-all duration-300 transform hover:scale-110 flex items-center justify-center w-[26px] h-[26px] md:w-[32px] md:h-[32px]" href="mailto:reservations@nola.pl" aria-label="Email">
+              <Mail className="w-full h-full" strokeWidth={1.5} />
+            </a>
+            <a className="text-[#e9e0da] transition-all duration-300 transform hover:scale-110 flex items-center justify-center w-[26px] h-[26px] md:w-[32px] md:h-[32px]" href="#" aria-label="Facebook">
+              <Facebook className="w-full h-full" strokeWidth={1.5} />
+            </a>
+            <a className="text-[#e9e0da] transition-all duration-300 transform hover:scale-110 flex items-center justify-center w-[26px] h-[26px] md:w-[32px] md:h-[32px]" href="#" aria-label="Instagram">
+              <Instagram className="w-full h-full" strokeWidth={1.5} />
+            </a>
+          </div>
+          
+          <div className="absolute bottom-2 right-4 z-50">
+            <Link to="/edytor" className="text-[#e9e0da]/40 text-xs transition-colors hover:text-[#e9e0da]">{t.edit_menu}</Link>
+          </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Reservation Modal Overlay */}
+      {isReservationOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReservationOpen(false)}></div>
+          <div className="bg-[#e9e0da] text-[#571723] w-full max-w-md p-8 rounded-xl relative shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setIsReservationOpen(false)}
+              className="absolute top-4 right-4 text-[#571723] opacity-50 transition-opacity flex items-center justify-center p-1 rounded-full"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+            <h3 className="font-display-lg text-2xl mb-6 text-center" style={{ fontFamily: '"Brygada 1918", serif' }}>{t.book_table}</h3>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                const button = e.currentTarget.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+                if (button) {
+                  button.disabled = true;
+                  button.innerHTML = t.sending;
+                }
+                setTimeout(() => {
+                  setIsReservationOpen(false);
+                  setIsReservationSuccessOpen(true);
+                  if (button) {
+                    button.disabled = false;
+                    button.innerHTML = t.book_table_upper;
+                  }
+                }, 1000);
+                
+                // optional fetch call, ignore if fails for now to always show success
+                fetch('/api/reserve', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ ...reservationData, origin: window.location.origin }),
+                }).catch(() => {});
+
+              } catch (error) {
+                setIsReservationOpen(false);
+                setIsReservationSuccessOpen(true);
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block font-label-sm tracking-widest uppercase mb-1 text-xs opacity-70">{t.date}</label>
+                <input 
+                  type="date" 
+                  required
+                  min={new Date().toISOString().split('T')[0]}
+                  value={reservationData.date}
+                  onChange={(e) => setReservationData({...reservationData, date: e.target.value})}
+                  className="w-full bg-white/60 border border-[#571723]/20 p-2 text-sm rounded focus:outline-none focus:border-[#571723]"
+                />
+              </div>
+              
+              <div>
+                <label className="block font-label-sm tracking-widest uppercase mb-1 text-xs opacity-70">{t.time}</label>
+                <select 
+                  required
+                  value={reservationData.time}
+                  onChange={(e) => setReservationData({...reservationData, time: e.target.value})}
+                  className="w-full bg-white/60 border border-[#571723]/20 p-2 text-sm rounded focus:outline-none focus:border-[#571723]"
+                >
+                  <option value="13:00">13:00</option>
+                  <option value="14:00">14:00</option>
+                  <option value="15:00">15:00</option>
+                  <option value="16:00">16:00</option>
+                  <option value="17:00">17:00</option>
+                  <option value="18:00">18:00</option>
+                  <option value="19:00">19:00</option>
+                  <option value="20:00">20:00</option>
+                  <option value="21:00">21:00</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-label-sm tracking-widest uppercase mb-1 text-xs opacity-70">{t.people_count}</label>
+                <select 
+                  required
+                  value={reservationData.people}
+                  onChange={(e) => setReservationData({...reservationData, people: e.target.value})}
+                  className="w-full bg-white/60 border border-[#571723]/20 p-2 text-sm rounded focus:outline-none focus:border-[#571723]"
+                >
+                  {[1,2,3,4,5,6,7,8].map(num => (
+                    <option key={num} value={num}>{num} {num === 1 ? t.person : (num >= 2 && num <= 4 ? t.people_few : t.people_many)}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-label-sm tracking-widest uppercase mb-1 text-xs opacity-70">{t.name}</label>
+                <input 
+                  type="text" 
+                  required
+                  value={reservationData.name}
+                  onChange={(e) => setReservationData({...reservationData, name: e.target.value})}
+                  placeholder={t.name_placeholder}
+                  className="w-full bg-white/60 border border-[#571723]/20 p-2 text-sm rounded focus:outline-none focus:border-[#571723]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-label-sm tracking-widest uppercase mb-1 text-xs opacity-70">{t.phone}</label>
+                <input 
+                  type="tel" 
+                  required
+                  value={reservationData.phone}
+                  onChange={(e) => setReservationData({...reservationData, phone: e.target.value})}
+                  placeholder="000 000 000"
+                  className="w-full bg-white/60 border border-[#571723]/20 p-2 text-sm rounded focus:outline-none focus:border-[#571723]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-label-sm tracking-widest uppercase mb-1 text-xs opacity-70">{t.email}</label>
+                <input 
+                  type="email" 
+                  required
+                  value={reservationData.email}
+                  onChange={(e) => setReservationData({...reservationData, email: e.target.value})}
+                  placeholder={t.email_placeholder}
+                  className="w-full bg-white/60 border border-[#571723]/20 p-2 text-sm rounded focus:outline-none focus:border-[#571723]"
+                />
+              </div>
+
+              <div className="pt-4">
+                <button type="submit" disabled={!Object.values(reservationData).every(val => val.toString().trim() !== '')} className="w-full bg-[#571723] text-[#e9e0da] py-3 rounded-xl font-label-sm tracking-widest uppercase transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                  {t.book_table_upper}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reservation Success Modal Overlay */}
+      {isReservationSuccessOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReservationSuccessOpen(false)}></div>
+          <div className="bg-[#e9e0da] text-[#571723] w-full max-w-md p-8 rounded-xl relative shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-center">
+            <h3 className="font-display-lg text-2xl mb-4" style={{ fontFamily: '"Brygada 1918", serif' }}>{t.thank_you}</h3>
+            <p className="mb-6 font-body-md text-sm opacity-90 leading-relaxed">
+              {t.reservation_submitted}<br />
+              {t.wait_for_email}
+            </p>
+            <button 
+              onClick={() => setIsReservationSuccessOpen(false)}
+              className="px-8 py-3 bg-[#571723] text-[#e9e0da] rounded-xl font-label-sm tracking-widest uppercase transition-opacity inline-block cursor-pointer"
+            >
+              {t.ok}
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+interface MenuItem {
+  name: string;
+  description: string;
+  price: string;
+  badges?: string[];
+}
+
+interface MenuSection {
+  category: string;
+  description?: string;
+  items: MenuItem[];
+}
+
+const formatPolishText = (text: string) => {
+  let result = text;
+  // Replace space after single letter conjunctions/prepositions with non-breaking space
+  result = result.replace(/\b([aAiIoOuUwWzZ])\s+/g, '$1\u00A0');
+  return result;
+};
+
+const renderDescription = (desc: string) => {
+  const formatted = formatPolishText(desc);
+  
+  const processWeightAndVol = (text: string) => {
+    // Split by weights and by alcohol percentages
+    const parts = text.split(/(\s*\([\d,]+[^)]*\)\s*|\s*(?:;\s*)?[\d,]+%\s*VOL\.\s*)/i);
+    return parts.map((part, pIdx) => {
+      if (/(\s*\([\d,]+[^)]*\)\s*)/.test(part)) {
+        const formattedPart = part.replace(/(\d+)\s*ml\b/gi, '$1 ml');
+        return <span key={pIdx} className="text-[14px] md:text-[16px]">{formattedPart}</span>;
+      }
+      if (/(\s*(?:;\s*)?[\d,]+%\s*VOL\.\s*)/i.test(part)) {
+        return <span key={pIdx} className="text-[14px] md:text-[16px]">{part}</span>;
+      }
+      return part.replace(/(\d+)\s*ml\b/gi, '$1 ml');
+    });
+  };
+
+  const lines = formatted.split('\n');
+  return lines.map((line, lineIdx) => {
+    if (!line.includes(' / ')) {
+      return (
+        <span key={lineIdx} className="block">
+          {processWeightAndVol(line)}
+        </span>
+      );
+    }
+
+    const parts = line.split(' / ');
+    return (
+      <span key={lineIdx} className="block">
+        {parts.map((part, index) => (
+          <span key={index}>
+            <span className="whitespace-nowrap">{processWeightAndVol(part)}</span>
+            {index < parts.length - 1 && ' / '}
+          </span>
+        ))}
+      </span>
+    );
+  });
+};
+
+function MenuPage() {
+  const { lang, setLang } = useContext(LanguageContext);
+  const t = translations[lang];
+  const navigate = useNavigate();
+  const { category } = useParams<{ category: string }>();
+  
+  const [data, setData] = useState<{ food: MenuSection[], cocktails: MenuSection[] }>(menuData);
+
+  useEffect(() => {
+    fetch('/api/menu')
+      .then(res => res.json())
+      .then(d => {
+        if (d && d.food && d.cocktails) {
+          setData(d);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const isCocktails = category === 'cocktails';
+
+  const scrollToSection = (idx: number) => {
+    const el = document.getElementById(`section-${idx}`);
+    const header = document.getElementById('sticky-nav-header');
+    if (el && header) {
+      const headerHeight = header.getBoundingClientRect().height;
+      const y = el.getBoundingClientRect().top + window.scrollY - headerHeight - 16;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    } else if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div 
+      className="min-h-screen bg-[#e9e0da] text-[#571723] flex flex-col items-center pt-[5px] px-[5px] pb-[5px] cursor-pointer w-full"
+      onClick={() => {
+        window.scrollTo(0, 0);
+        navigate('/');
+      }}
+    >
+      <div 
+        className="w-full max-w-4xl bg-white px-4 md:px-16 pt-0 pb-4 md:pb-16 rounded-xl shadow-xl flex flex-col items-center relative cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div id="sticky-nav-header" className="sticky top-[5px] bg-white z-20 w-full pt-4 md:pt-10 pb-4 border-b border-[#571723]/20 shadow-[0_15px_15px_-15px_rgba(0,0,0,0.1)] mb-8 px-2 md:px-0 rounded-t-xl">
+          <div className="relative flex items-center justify-center w-full mb-6 mt-2">
+            <button 
+              onClick={() => {
+                window.scrollTo(0, 0);
+                navigate('/');
+              }} 
+              className="absolute left-0 md:left-0 text-[#571723]/60 transition-colors flex items-center gap-[2px] group z-10"
+              style={{ paddingLeft: '2px' }}
+            >
+              <span className="material-symbols-outlined text-[16px] md:text-[20px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+              <span className="font-label-sm uppercase tracking-widest text-[8px] md:text-[10px]">{t.back}</span>
+            </button>
+
+            <h1 className="font-['Brygada_1918'] text-3xl md:text-5xl text-center tracking-wider m-0 leading-none">
+              {isCocktails ? t.cocktails : t.food}
+            </h1>
+          </div>
+          
+          <div className="w-full flex flex-wrap gap-1.5 md:gap-2 justify-center max-h-[33vh] overflow-y-auto md:max-h-none md:overflow-visible scrollbar-hide">
+            {(isCocktails ? data.cocktails : data.food).map((section, idx) => (
+              <button 
+                key={`nav-${idx}`}
+                onClick={() => scrollToSection(idx)}
+                className="font-label-sm uppercase tracking-widest text-[10px] px-2.5 py-1.5 border border-tertiary-container/20 rounded-lg whitespace-nowrap transition-colors hover:bg-[#571723]/5"
+              >
+                {section.category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full flex gap-12 max-w-3xl justify-center pt-2 md:pt-4">
+          <div className="w-full flex-col flex gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {((isCocktails ? data.cocktails : data.food) as MenuSection[]).map((section, idx) => (
+              <div key={`section-${idx}`} id={`section-${idx}`} className="w-full scroll-mt-[120px]">
+                <h2 className="font-['Brygada_1918'] text-2xl mb-2 text-center tracking-widest">{formatPolishText(section.category)}</h2>
+                {section.description && <p className="text-center italic opacity-80 mb-6 font-['Inter'] font-light text-sm">{formatPolishText(section.description)}</p>}
+                {!section.description && <div className="mb-6"></div>}
+                <div className="w-full border-b border-tertiary-container/20 mb-6"></div>
+                <div className="flex flex-col gap-6">
+                  {section.items.map((item, itemIdx) => (
+                    <div key={`item-${idx}-${itemIdx}`} className={`flex justify-between items-start gap-4 w-full ${itemIdx < section.items.length - 1 ? 'border-b border-tertiary-container/20 pb-2' : ''}`}>
+                      <div className="flex flex-col gap-1 pr-2 md:pr-4 flex-1 min-w-0">
+                        <div className="leading-snug text-[14px] md:text-[16px]">
+                          {(() => {
+                            const nameStr = formatPolishText(item.name);
+                            const lastSpace = nameStr.lastIndexOf(' ');
+                            if (lastSpace === -1 || !item.badges || item.badges.length === 0) {
+                              return (
+                                <>
+                                  <span className="font-body-md font-bold text-left inline">
+                                    {nameStr}
+                                  </span>
+                                  {item.badges && item.badges.map((badge, bIdx) => (
+                                    <span key={`badge-${itemIdx}-${bIdx}`} className="inline-block text-[9px] md:text-[10px] font-normal opacity-70 border border-tertiary-container/40 px-1.5 py-[1px] rounded-xl whitespace-nowrap align-middle ml-2 -mt-[2px]">
+                                      {formatPolishText(badge)}
+                                    </span>
+                                  ))}
+                                </>
+                              );
+                            }
+                            const initialWords = nameStr.substring(0, lastSpace);
+                            const lastWord = nameStr.substring(lastSpace + 1);
+                            return (
+                              <>
+                                <span className="font-body-md font-bold text-left inline">
+                                  {initialWords}{' '}
+                                </span>
+                                <span className="whitespace-nowrap">
+                                  <span className="font-body-md font-bold text-left inline">
+                                    {lastWord}
+                                  </span>
+                                  {item.badges.map((badge, bIdx) => (
+                                    <span key={`badge-${itemIdx}-${bIdx}`} className="inline-block text-[9px] md:text-[10px] font-normal opacity-70 border border-tertiary-container/40 px-1.5 py-[1px] rounded-xl whitespace-nowrap align-middle ml-2 -mt-[2px]">
+                                      {formatPolishText(badge)}
+                                    </span>
+                                  ))}
+                                </span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                        {item.description && <span className="font-['Inter'] font-light text-sm opacity-80 leading-[1.15] mt-[2px] break-words">{renderDescription(item.description)}</span>}
+                      </div>
+                      <div className="flex flex-col items-end shrink-0 min-w-[75px] md:min-w-[100px] pl-1">
+                        {item.price.includes('/') ? (
+                          item.price.split('/').map((pricePart, pIdx) => (
+                            <span key={pIdx} className="font-body-md font-bold text-right whitespace-nowrap text-[14px] md:text-[16px] leading-snug">{pricePart.trim().replace(/(\d+)\s*ml\b/gi, '$1 ml')}</span>
+                          ))
+                        ) : (
+                          <span className="font-body-md font-bold text-right whitespace-nowrap text-[14px] md:text-[16px] leading-snug">{item.price.replace(/(\d+)\s*ml\b/gi, '$1 ml')}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [lang, setLang] = useState<Language>('pl');
+  return (
+    <LanguageContext.Provider value={{lang, setLang}}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/menu" element={<Navigate to="/menu/food" replace />} />
+        <Route path="/menu/:category" element={<MenuPage />} />
+        <Route path="/edytor" element={<MenuEditor />} />
+      </Routes>
+    </LanguageContext.Provider>
+  );
+}

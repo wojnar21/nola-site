@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import "tailwindcss";
+
+html, body {
+    background-color: #571723;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@theme {
+    --color-primary-fixed: #ffd9dc;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-fixed-dim: #ffb597;
+    --color-surface-container-high: #e8e8e8;
+    --color-surface: #f9f9f9;
+    --color-on-secondary: #ffffff;
+    --color-background: #f9f9f9;
+    --color-inverse-surface: #2f3131;
+    --color-surface-variant: #e2e2e2;
+    --color-inverse-primary: #ffb2ba;
+    --color-on-tertiary-fixed-variant: #7d2d00;
+    --color-error-container: #ffdad6;
+    --color-tertiary-fixed: #ffdbcd;
+    --color-on-tertiary-fixed: #360f00;
+    --color-on-secondary-fixed: #1f1b17;
+    --color-secondary: #635d59;
+    --color-outline: #867273;
+    --color-surface-dim: #dadada;
+    --color-surface-container: #eeeeee;
+    --color-on-error: #ffffff;
+    --color-surface-tint: #944651;
+    --color-surface-container-low: #f3f3f4;
+    --color-primary-fixed-dim: #ffb2ba;
+    --color-secondary-container: #e7ded8;
+    --color-primary-container: #571723;
+    --color-tertiary-container: #551c00;
+    --color-on-primary: #ffffff;
+    --color-secondary-fixed-dim: #cdc5bf;
+    --color-surface-container-lowest: #ffffff;
+    --color-primary: #3b0210;
+    --color-tertiary: #330e00;
+    --color-surface-bright: #f9f9f9;
+    --color-on-tertiary-container: #ec733a;
+    --color-on-primary-fixed-variant: #762f3a;
+    --color-on-primary-fixed: #3e0411;
+    --color-on-surface: #1a1c1c;
+    --color-surface-container-highest: #e2e2e2;
+    --color-error: #ba1a1a;
+    --color-on-secondary-container: #67615d;
+    --color-inverse-on-surface: #f0f1f1;
+    --color-outline-variant: #d9c1c2;
+    --color-on-secondary-fixed-variant: #4b4642;
+    --color-on-primary-container: #d67c86;
+    --color-secondary-fixed: #eae1db;
+    --color-on-surface-variant: #534344;
+    --color-on-error-container: #93000a;
+    --color-on-background: #1a1c1c;
+
+    --font-title-md: "Merriweather", serif;
+    --font-display-lg: "Brygada 1918", serif;
+    --font-headline-lg-mobile: "Brygada 1918", serif;
+    --font-headline-lg: "Brygada 1918", serif;
+    --font-body-md: "Merriweather", serif;
+    --font-label-sm: "Inter", sans-serif;
+    --font-body-lg: "Merriweather", serif;
+
+    --text-title-md: 20px;
+    --text-title-md--line-height: 1.5;
+    --text-title-md--font-weight: 400;
+    --text-display-lg: 48px;
+    --text-display-lg--line-height: 1.1;
+    --text-display-lg--letter-spacing: -0.02em;
+    --text-display-lg--font-weight: 600;
+    --text-headline-lg-mobile: 28px;
+    --text-headline-lg-mobile--line-height: 1.2;
+    --text-headline-lg-mobile--font-weight: 500;
+    --text-headline-lg: 32px;
+    --text-headline-lg--line-height: 1.2;
+    --text-headline-lg--font-weight: 500;
+    --text-body-md: 16px;
+    --text-body-md--line-height: 1.6;
+    --text-body-md--font-weight: 400;
+    --text-label-sm: 12px;
+    --text-label-sm--line-height: 1.2;
+    --text-label-sm--letter-spacing: 0.05em;
+    --text-label-sm--font-weight: 600;
+    --text-body-lg: 18px;
+    --text-body-lg--line-height: 1.6;
+    --text-body-lg--font-weight: 400;
+
+    --spacing-gutter: 24px;
+    --spacing-unit: 8px;
+    --spacing-margin-desktop: 64px;
+    --spacing-container-max: 1280px;
+    --spacing-margin-mobile: 16px;
+}
+
+.filter-beige {
+    filter: brightness(0) invert(92%) sepia(8%) saturate(415%) hue-rotate(334deg) brightness(95%) contrast(91%);
+}
+
+.glass-effect {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.text-shadow-subtle {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.nav-link-animated {
+    position: relative;
+    text-decoration: none;
+}
+.nav-link-animated::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 50%;
+    background-color: currentColor !important;
+    transform: translateX(-50%);
+    opacity: 0.1;
+    transition: width 1000ms cubic-bezier(0.4, 0, 0.2, 1), opacity 1000ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-link-animated:hover::after {
+    width: 100%;
+    opacity: 1;
+}
+@keyframes pulse-smooth {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.btn-dalej {
+    animation: pulse-smooth 4s ease-in-out infinite;
+    transition: transform 0.6s ease-in-out, color 0.6s ease-in-out;
+}
+.btn-dalej:hover {
+    animation: none;
+    transform: scale(1.2);
+}
+.hummus-plate {
+    will-change: transform;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+.hummus-plate:active {
+    cursor: grabbing;
+}
+.gallery-transition-container {
+    position: relative;
+    overflow: hidden;
+}
+.gallery-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 800ms cubic-bezier(0.4, 0, 0.2, 1), transform 800ms cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    transform: scale(1.05);
+}
+.gallery-image.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 10;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
